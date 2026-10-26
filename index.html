@@ -169,8 +169,10 @@
     }
     button.primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
     button.primary:disabled { opacity: .45; cursor: default; transform: none; }
-    .intro, .results { display: grid; min-height: 438px; place-items: center; padding: 40px 20px; text-align: center; }
-    .intro-inner, .results-inner { max-width: 410px; }
+    .intro { display: grid; min-height: 438px; place-items: center; padding: 40px 20px; text-align: center; }
+    .results { padding: 32px clamp(18px, 5vw, 42px); }
+    .intro-inner { max-width: 440px; }
+    .results-inner { width: min(100%, 500px); margin: 0 auto; text-align: center; }
     .hero-icon {
       display: grid;
       width: 58px;
@@ -198,9 +200,35 @@
       font-size: 14px;
     }
     input:focus { outline: 2px solid rgba(168, 255, 96, .55); border-color: transparent; }
-    .results .final-score { margin: 4px 0 14px; color: var(--accent); font-size: 50px; font-weight: 750; letter-spacing: -.05em; }
+    .setup-error { min-height: 20px; margin: -12px 0 12px; color: #ff9ab9; font-size: 12px; }
+    .results .final-score { margin: 4px 0 8px; color: var(--accent); font-size: 42px; font-weight: 750; letter-spacing: -.05em; }
     .results .final-score span { color: var(--muted); font-size: 18px; font-weight: 500; letter-spacing: 0; }
     .results-note { padding: 13px 15px; border: 1px solid rgba(96, 231, 255, .18); border-radius: 10px; background: rgba(96, 231, 255, .06); color: #b5c5ce; font-size: 13px; line-height: 1.6; }
+    .leaderboard { margin: 18px 0 16px; overflow: hidden; border: 1px solid #27333d; border-radius: 12px; background: rgba(11, 17, 23, .65); text-align: left; }
+    .leaderboard-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid #27333d; color: #e8edf2; font-size: 13px; font-weight: 650; }
+    .leaderboard-heading span:last-child { color: var(--muted); font-size: 11px; font-weight: 500; }
+    .leaderboard-list { max-height: 220px; overflow-y: auto; margin: 0; padding: 4px 14px; list-style: none; }
+    .leaderboard-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 43px; border-bottom: 1px solid rgba(39, 51, 61, .65); font-size: 13px; }
+    .leaderboard-row:last-child { border-bottom: 0; }
+    .leaderboard-rank { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 650; }
+    .leaderboard-row:first-child .leaderboard-rank { color: var(--accent); }
+    .leaderboard-player { overflow: hidden; color: #dce4ea; text-overflow: ellipsis; white-space: nowrap; }
+    .leaderboard-points { color: var(--cyan); font-variant-numeric: tabular-nums; font-weight: 700; }
+    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 17px; }
+    button.secondary {
+      min-height: 43px;
+      padding: 0 15px;
+      border: 1px solid #34414b;
+      border-radius: 10px;
+      background: rgba(16, 22, 29, .82);
+      color: #dce4ea;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary:hover { border-color: #667883; background: #151e26; }
+    .share-note { margin: 13px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     [hidden] { display: none !important; }
 
     .below { display: flex; justify-content: space-between; gap: 16px; padding: 14px 2px 0; color: var(--muted); font-size: 12px; }
@@ -210,12 +238,17 @@
       .topline { margin-bottom: 16px; }
       .eyebrow { max-width: 135px; text-align: right; line-height: 1.45; }
       .scoreboard { gap: 7px; }
-      .stat { min-height: 53px; padding: 0 10px; }
+      .stat { min-height: 53px; padding: 0 8px; }
       .stat-label { font-size: 12px; }
-      .stat-value { font-size: 16px; }
+      .stat-value { max-width: 70px; overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap; }
       .game-content { padding-top: 24px; }
       .below { flex-direction: column; gap: 7px; }
-      .intro, .results { min-height: 420px; }
+      .intro { min-height: 420px; }
+      .setup-row { flex-direction: column; gap: 7px; }
+      input { width: min(100%, 260px); }
+      .results { padding: 26px 16px; }
+      .result-actions { flex-direction: column; }
+      .result-actions button { width: 100%; }
     }
 
     @media (prefers-color-scheme: light) {
@@ -229,6 +262,11 @@
       .answer-key { border-color: #d4dfe1; color: #65767b; }
       input { background: white; color: #172126; border-color: #c9d5d8; }
       .below { color: #627076; }
+      .leaderboard { border-color: #d4dfe1; background: rgba(255, 255, 255, .7); }
+      .leaderboard-heading { border-color: #d4dfe1; color: #172126; }
+      .leaderboard-row { border-color: #e0e7e8; }
+      .leaderboard-player { color: #27353b; }
+      button.secondary { border-color: #c9d5d8; background: white; color: #27353b; }
     }
   </style>
 </head>
@@ -245,9 +283,9 @@
     </header>
 
     <section class="scoreboard" aria-label="Marcador del equipo">
-      <div class="stat"><span class="stat-label">Equipo</span><span class="stat-value" id="team-stat">—</span></div>
+      <div class="stat"><span class="stat-label">Participantes</span><span class="stat-value" id="participant-count-stat">0</span></div>
       <div class="stat"><span class="stat-label">Puntos</span><span class="stat-value" id="score-stat">0</span></div>
-      <div class="stat"><span class="stat-label">Ronda</span><span class="stat-value" id="round-stat">0/10</span></div>
+      <div class="stat"><span class="stat-label">Pregunta</span><span class="stat-value" id="round-stat">0/10</span></div>
     </section>
 
     <section class="game-shell" aria-label="Trivia sobre agilidad para retrospectivas">
@@ -256,10 +294,11 @@
           <div class="hero-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" fill="currentColor"/></svg>
           </div>
-          <h1>¿Qué tan ágil es tu equipo?</h1>
-          <p>Hagan equipo, compartan ideas y pongan a prueba sus conocimientos sobre agilidad. Diez preguntas breves para entrar en calor antes de una retrospectiva.</p>
-          <label class="setup-row" for="team-name">Nombre del equipo <input id="team-name" maxlength="24" placeholder="Por ejemplo, Las Iteradoras" autocomplete="off"></label>
-          <button class="primary" id="start" type="button">Empezar trivia</button>
+          <h1>¿Quién será el campeón ágil?</h1>
+          <p>Cada persona juega su propia ronda de diez preguntas. Compitan, aprendan y descubran quién se lleva el primer puesto en la retro.</p>
+          <label class="setup-row" for="player-name">Tu nombre <input id="player-name" maxlength="24" placeholder="Por ejemplo, Alex" autocomplete="off"></label>
+          <p class="setup-error" id="setup-error" role="alert" hidden></p>
+          <button class="primary" id="start" type="button">Empezar mi ronda</button>
         </div>
       </div>
 
@@ -276,7 +315,7 @@
         <div class="answers" id="answers" aria-label="Opciones de respuesta"></div>
         <div class="feedback" id="feedback" aria-live="polite"></div>
         <div class="bottom-row">
-          <span class="team-label">Juega <strong id="team-name-label">El equipo</strong></span>
+          <span class="team-label">Turno de <strong id="team-name-label">La persona participante</strong></span>
           <button class="primary" id="next" type="button" disabled>Siguiente pregunta</button>
         </div>
       </div>
@@ -286,16 +325,25 @@
           <div class="hero-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
           </div>
-          <h1 id="result-title">¡Buen trabajo, equipo!</h1>
+          <h1 id="result-title">¡Buen trabajo!</h1>
           <div class="final-score" id="final-score">0 <span>/ 10</span></div>
-          <p id="result-message">Cada pregunta es una oportunidad para aprender en equipo.</p>
+          <p id="result-message">Una ronda más para la clasificación.</p>
+          <section class="leaderboard" aria-label="Clasificación de participantes">
+            <div class="leaderboard-heading"><span id="leaderboard-title">Clasificación provisional</span><span id="leaderboard-count">0 participantes</span></div>
+            <ol class="leaderboard-list" id="leaderboard"></ol>
+          </section>
           <div class="results-note" id="retro-prompt">Pregunta para la retro: ¿Qué pequeño experimento podríamos probar en el próximo sprint?</div>
-          <button class="primary" id="play-again" type="button" style="margin-top: 22px">Jugar otra vez</button>
+          <div class="result-actions" id="result-actions">
+            <button class="primary" id="add-player" type="button">Agregar participante</button>
+            <button class="secondary" id="finish-game" type="button">Finalizar y ver ranking</button>
+          </div>
+          <button class="primary" id="play-again" type="button" style="margin-top: 22px" hidden>Empezar una nueva partida</button>
+          <p class="share-note" id="share-note">La clasificación de esta partida se guarda solo en este navegador. Para competir, pasen el mismo dispositivo de una persona a otra.</p>
         </div>
       </div>
     </section>
     <footer class="below">
-      <span>Jueguen en equipo: <strong>conversen antes de responder.</strong></span>
+      <span>Compitan con buena onda: <strong>conversen antes de responder.</strong></span>
       <span>Sin reloj ni presión: solo buenas conversaciones.</span>
     </footer>
   </main>
@@ -378,8 +426,9 @@
       const intro = document.querySelector("#intro");
       const quiz = document.querySelector("#quiz");
       const results = document.querySelector("#results");
-      const teamInput = document.querySelector("#team-name");
-      const teamStat = document.querySelector("#team-stat");
+      const playerInput = document.querySelector("#player-name");
+      const setupError = document.querySelector("#setup-error");
+      const participantCountStat = document.querySelector("#participant-count-stat");
       const scoreStat = document.querySelector("#score-stat");
       const roundStat = document.querySelector("#round-stat");
       const teamNameLabel = document.querySelector("#team-name-label");
@@ -391,14 +440,29 @@
       const answersElement = document.querySelector("#answers");
       const feedback = document.querySelector("#feedback");
       const nextButton = document.querySelector("#next");
-      let teamName = "El equipo";
+      const players = [];
+      let playerName = "";
       let score = 0;
       let currentQuestion = 0;
       let answered = false;
       let roundQuestions = [];
 
       function startGame() {
-        teamName = teamInput.value.trim() || "El equipo";
+        playerName = playerInput.value.trim();
+        if (!playerName) {
+          setupError.textContent = "Escribe tu nombre para aparecer en la clasificación.";
+          setupError.hidden = false;
+          playerInput.focus();
+          return;
+        }
+        const alreadyPlayed = players.some(player => player.name.localeCompare(playerName, "es", { sensitivity: "base" }) === 0);
+        if (alreadyPlayed) {
+          setupError.textContent = "Ese nombre ya participó. Escribe un nombre distinto para que el ranking sea claro.";
+          setupError.hidden = false;
+          playerInput.focus();
+          return;
+        }
+        setupError.hidden = true;
         roundQuestions = questions.map(item => {
           const choices = item.answers.map((text, index) => ({ text, correct: index === item.correct }));
           for (let index = choices.length - 1; index > 0; index--) {
@@ -414,8 +478,8 @@
         score = 0;
         currentQuestion = 0;
         scoreStat.textContent = score;
-        teamStat.textContent = teamName;
-        teamNameLabel.textContent = teamName;
+        participantCountStat.textContent = players.length + 1;
+        teamNameLabel.textContent = playerName;
         intro.hidden = true;
         results.hidden = true;
         quiz.hidden = false;
@@ -478,32 +542,104 @@
       }
 
       function showResults() {
+        players.push({ name: playerName, score });
+        participantCountStat.textContent = players.length;
         quiz.hidden = true;
         results.hidden = false;
         roundStat.textContent = `${questions.length}/${questions.length}`;
         progress.style.width = "100%";
         progressTrack.setAttribute("aria-valuenow", questions.length);
         document.querySelector("#result-title").textContent = score === questions.length
-          ? "¡Un equipo ágil de primera!"
-          : score >= 7 ? "¡Gran intuición de equipo!" : "¡La curiosidad nos ayuda a crecer!";
+          ? `¡Ronda perfecta, ${playerName}!`
+          : score >= 7 ? `¡Gran intuición, ${playerName}!` : `¡Buen trabajo, ${playerName}!`;
         document.querySelector("#final-score").innerHTML = `${score} <span>/ ${questions.length}</span>`;
         document.querySelector("#result-message").textContent =
-          `${teamName} respondió correctamente ${score} de ${questions.length} preguntas. Lo mejor fue todo lo que conversaron en el camino.`;
+          `Acertaste ${score} de ${questions.length}. Ya estás en la clasificación; ¡que pase la siguiente persona!`;
         document.querySelector("#retro-prompt").textContent =
-          score >= 7
-            ? "Pregunta para la retro: ¿Cuál de estos hábitos ágiles ya es una fortaleza del equipo y cómo podrían desarrollarlo?"
-            : "Pregunta para la retro: ¿Qué idea de la trivia podrían probar como un pequeño experimento en el próximo sprint?";
+          "Idea para la retro: ¿Qué aprendizaje de esta ronda podríamos convertir en un pequeño experimento para el próximo sprint?";
+        document.querySelector("#leaderboard-title").textContent = "Clasificación provisional";
+        document.querySelector("#result-actions").hidden = false;
+        document.querySelector("#play-again").hidden = true;
+        document.querySelector("#share-note").hidden = false;
+        renderLeaderboard();
+      }
+
+      function renderLeaderboard() {
+        const leaderboard = document.querySelector("#leaderboard");
+        const sortedPlayers = [...players].sort((first, second) => second.score - first.score);
+        const count = sortedPlayers.length;
+        document.querySelector("#leaderboard-count").textContent =
+          `${count} ${count === 1 ? "participante" : "participantes"}`;
+        leaderboard.replaceChildren();
+        sortedPlayers.forEach((player, index) => {
+          const row = document.createElement("li");
+          row.className = "leaderboard-row";
+          const previous = sortedPlayers[index - 1];
+          const rank = document.createElement("span");
+          rank.className = "leaderboard-rank";
+          rank.textContent = previous && previous.score === player.score
+            ? leaderboard.children[index - 1].querySelector(".leaderboard-rank").textContent
+            : `${index + 1}.`;
+          const name = document.createElement("span");
+          name.className = "leaderboard-player";
+          name.textContent = player.name;
+          const points = document.createElement("span");
+          points.className = "leaderboard-points";
+          points.textContent = `${player.score} ${player.score === 1 ? "punto" : "puntos"}`;
+          row.append(rank, name, points);
+          leaderboard.append(row);
+        });
+      }
+
+      function addPlayer() {
+        results.hidden = true;
+        intro.hidden = false;
+        playerInput.value = "";
+        setupError.hidden = true;
+        playerInput.focus();
+      }
+
+      function finishGame() {
+        document.querySelector("#result-title").textContent = "¡Clasificación final!";
+        document.querySelector("#result-message").textContent =
+          `${players.length} ${players.length === 1 ? "persona participó" : "personas participaron"}. ¡Gracias por competir y aprender en equipo!`;
+        const totalPoints = players.reduce((total, player) => total + player.score, 0);
+        document.querySelector("#final-score").innerHTML = `${totalPoints} <span>puntos totales</span>`;
+        document.querySelector("#leaderboard-title").textContent = "Ranking final";
+        document.querySelector("#result-actions").hidden = true;
+        document.querySelector("#play-again").hidden = false;
+        document.querySelector("#retro-prompt").textContent =
+          "Pregunta para la retro: ¿Qué hábito ágil del equipo quieren fortalecer en el próximo sprint?";
+        document.querySelector("#share-note").textContent =
+          "Este ranking se guarda solo en este navegador y en este dispositivo.";
+        renderLeaderboard();
+      }
+
+      function newGame() {
+        players.length = 0;
+        score = 0;
+        participantCountStat.textContent = "0";
+        scoreStat.textContent = "0";
+        roundStat.textContent = "0/10";
+        playerInput.value = "";
+        setupError.hidden = true;
+        results.hidden = true;
+        intro.hidden = false;
+        playerInput.focus();
       }
 
       document.querySelector("#start").addEventListener("click", startGame);
+      document.querySelector("#add-player").addEventListener("click", addPlayer);
+      document.querySelector("#finish-game").addEventListener("click", finishGame);
       nextButton.addEventListener("click", () => {
         if (!answered) return;
         currentQuestion++;
         if (currentQuestion === questions.length) showResults();
         else renderQuestion();
       });
-      document.querySelector("#play-again").addEventListener("click", startGame);
-      teamInput.addEventListener("keydown", event => {
+      document.querySelector("#play-again").addEventListener("click", newGame);
+      playerInput.addEventListener("input", () => { setupError.hidden = true; });
+      playerInput.addEventListener("keydown", event => {
         if (event.key === "Enter") startGame();
       });
     })();
