@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d12">
+  <title>Trivia ágil para retrospectivas</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      background: #090d12;
+      color: #e8edf2;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --muted: #87929e;
+      --line: #202a34;
+      --panel: #10161d;
+      --accent: #a8ff60;
+      --cyan: #60e7ff;
+      --pink: #ff6f9f;
+      --purple: #bc9cff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px 20px;
+      background:
+        radial-gradient(ellipse at 50% 38%, rgba(28, 47, 54, .24), transparent 54%),
+        #090d12;
+    }
+
+    main { width: min(100%, 700px); }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 15px; font-weight: 650; }
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1px solid rgba(168, 255, 96, .24);
+      border-radius: 11px;
+      background: rgba(168, 255, 96, .08);
+      color: var(--accent);
+    }
+    .brand-mark svg { width: 20px; height: 20px; }
+    .eyebrow { color: var(--muted); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+
+    .scoreboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 58px;
+      padding: 0 17px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(16, 22, 29, .88);
+    }
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { color: #f2f7fb; font-size: 18px; font-variant-numeric: tabular-nums; font-weight: 650; }
+    .stat:nth-child(2) .stat-value { color: var(--cyan); }
+    .stat:nth-child(3) .stat-value { color: var(--purple); }
+
+    .game-shell {
+      overflow: hidden;
+      border: 1px solid #27333d;
+      border-radius: 16px;
+      background-color: #0b1117;
+      background-image:
+        linear-gradient(rgba(137, 164, 177, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(137, 164, 177, .035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .38), 0 0 0 1px rgba(255, 255, 255, .015);
+    }
+
+    .game-content { width: min(100%, 580px); margin: 0 auto; padding: 30px clamp(18px, 5vw, 42px) 34px; }
+    .progress-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .round-label { color: var(--muted); font-size: 13px; }
+    .round-label strong { color: #d7e1e8; font-weight: 600; }
+    .category {
+      padding: 6px 10px;
+      border: 1px solid rgba(96, 231, 255, .22);
+      border-radius: 999px;
+      background: rgba(96, 231, 255, .07);
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .progress-track { height: 4px; overflow: hidden; margin-bottom: 25px; border-radius: 5px; background: #202a34; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--cyan)); transition: width .35s ease; }
+    h1 { margin: 0 0 12px; font-size: clamp(22px, 4vw, 29px); letter-spacing: -.035em; line-height: 1.25; }
+    .prompt { min-height: 52px; margin: 0 0 22px; color: #a4afb9; font-size: 14px; line-height: 1.65; }
+    .answers { display: grid; gap: 10px; }
+    .answer {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      width: 100%;
+      min-height: 56px;
+      padding: 10px 13px;
+      border: 1px solid #27333d;
+      border-radius: 11px;
+      background: rgba(16, 22, 29, .82);
+      color: #dce4ea;
+      font: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .answer:not(:disabled):hover { transform: translateY(-1px); border-color: #53646e; background: #151e26; }
+    .answer:focus-visible, button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+    .answer:disabled { cursor: default; }
+    .answer-key {
+      display: grid;
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid #34414b;
+      border-radius: 8px;
+      color: #98a6b0;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .answer.correct { border-color: rgba(168, 255, 96, .55); background: rgba(168, 255, 96, .09); color: #d8ffc0; }
+    .answer.correct .answer-key { border-color: rgba(168, 255, 96, .45); background: rgba(168, 255, 96, .14); color: var(--accent); }
+    .answer.incorrect { border-color: rgba(255, 111, 159, .45); background: rgba(255, 111, 159, .08); color: #ffd5e2; }
+    .answer.incorrect .answer-key { border-color: rgba(255, 111, 159, .4); color: var(--pink); }
+    .feedback { min-height: 46px; padding: 13px 2px 0; color: #a4afb9; font-size: 13px; line-height: 1.55; }
+    .feedback.good { color: var(--accent); }
+    .feedback.bad { color: #ff9ab9; }
+
+    .bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 8px; }
+    .team-label { color: var(--muted); font-size: 12px; }
+    .team-label strong { color: #d7e1e8; font-weight: 600; }
+    button.primary {
+      min-height: 43px;
+      padding: 0 17px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #10170c;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .15s ease, filter .15s ease;
+    }
+    button.primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    button.primary:disabled { opacity: .45; cursor: default; transform: none; }
+    .intro, .results { display: grid; min-height: 438px; place-items: center; padding: 40px 20px; text-align: center; }
+    .intro-inner, .results-inner { max-width: 410px; }
+    .hero-icon {
+      display: grid;
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 20px;
+      place-items: center;
+      border: 1px solid rgba(168, 255, 96, .25);
+      border-radius: 18px;
+      background: rgba(168, 255, 96, .08);
+      color: var(--accent);
+    }
+    .hero-icon svg { width: 27px; height: 27px; }
+    .intro h1, .results h1 { font-size: clamp(27px, 5vw, 36px); }
+    .intro p, .results p { margin: 0 auto 23px; color: #a4afb9; font-size: 14px; line-height: 1.7; }
+    .setup-row { display: flex; align-items: center; justify-content: center; gap: 9px; margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+    input {
+      width: min(100%, 185px);
+      min-height: 40px;
+      padding: 0 11px;
+      border: 1px solid #34414b;
+      border-radius: 9px;
+      background: #0b1117;
+      color: #e8edf2;
+      font: inherit;
+      font-size: 14px;
+    }
+    input:focus { outline: 2px solid rgba(168, 255, 96, .55); border-color: transparent; }
+    .results .final-score { margin: 4px 0 14px; color: var(--accent); font-size: 50px; font-weight: 750; letter-spacing: -.05em; }
+    .results .final-score span { color: var(--muted); font-size: 18px; font-weight: 500; letter-spacing: 0; }
+    .results-note { padding: 13px 15px; border: 1px solid rgba(96, 231, 255, .18); border-radius: 10px; background: rgba(96, 231, 255, .06); color: #b5c5ce; font-size: 13px; line-height: 1.6; }
+    [hidden] { display: none !important; }
+
+    .below { display: flex; justify-content: space-between; gap: 16px; padding: 14px 2px 0; color: var(--muted); font-size: 12px; }
+    .below strong { color: #cbd4dc; font-weight: 600; }
+    @media (max-width: 520px) {
+      body { padding: 20px 14px; }
+      .topline { margin-bottom: 16px; }
+      .eyebrow { max-width: 135px; text-align: right; line-height: 1.45; }
+      .scoreboard { gap: 7px; }
+      .stat { min-height: 53px; padding: 0 10px; }
+      .stat-label { font-size: 12px; }
+      .stat-value { font-size: 16px; }
+      .game-content { padding-top: 24px; }
+      .below { flex-direction: column; gap: 7px; }
+      .intro, .results { min-height: 420px; }
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root { color-scheme: light; background: #f2f5f6; color: #172126; }
+      body { background: radial-gradient(ellipse at 50% 38%, #dce8e7, transparent 56%), #f2f5f6; }
+      .stat { background: rgba(255, 255, 255, .85); border-color: #d7e0e1; }
+      .stat-value, .round-label strong, .team-label strong { color: #172126; }
+      .game-shell { border-color: #d3dddf; background-color: #edf2f1; background-image: linear-gradient(rgba(70, 102, 109, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(70, 102, 109, .06) 1px, transparent 1px); box-shadow: 0 20px 60px rgba(35, 52, 58, .14); }
+      .answer { border-color: #d4dfe1; background: rgba(255, 255, 255, .82); color: #27353b; }
+      .answer:not(:disabled):hover { border-color: #9baeb2; background: #fff; }
+      .answer-key { border-color: #d4dfe1; color: #65767b; }
+      input { background: white; color: #172126; border-color: #c9d5d8; }
+      .below { color: #627076; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="topline">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 12h4l2.2-6 3.6 12 2.2-6H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        Trivia ágil
+      </div>
+      <span class="eyebrow">Un poco de aprendizaje para tu próxima retro</span>
+    </header>
+
+    <section class="scoreboard" aria-label="Marcador del equipo">
+      <div class="stat"><span class="stat-label">Equipo</span><span class="stat-value" id="team-stat">—</span></div>
+      <div class="stat"><span class="stat-label">Puntos</span><span class="stat-value" id="score-stat">0</span></div>
+      <div class="stat"><span class="stat-label">Ronda</span><span class="stat-value" id="round-stat">0/10</span></div>
+    </section>
+
+    <section class="game-shell" aria-label="Trivia sobre agilidad para retrospectivas">
+      <div class="intro" id="intro">
+        <div class="intro-inner">
+          <div class="hero-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" fill="currentColor"/></svg>
+          </div>
+          <h1>¿Qué tan ágil es tu equipo?</h1>
+          <p>Hagan equipo, compartan ideas y pongan a prueba sus conocimientos sobre agilidad. Diez preguntas breves para entrar en calor antes de una retrospectiva.</p>
+          <label class="setup-row" for="team-name">Nombre del equipo <input id="team-name" maxlength="24" placeholder="Por ejemplo, Las Iteradoras" autocomplete="off"></label>
+          <button class="primary" id="start" type="button">Empezar trivia</button>
+        </div>
+      </div>
+
+      <div class="game-content" id="quiz" hidden>
+        <div class="progress-row">
+          <span class="round-label">Pregunta <strong id="question-number">1 de 10</strong></span>
+          <span class="category" id="category">Valores ágiles</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-label="Progreso de la trivia" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <h1 id="question"></h1>
+        <p class="prompt" id="prompt">Pónganse de acuerdo y elijan una respuesta.</p>
+        <div class="answers" id="answers" aria-label="Opciones de respuesta"></div>
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="bottom-row">
+          <span class="team-label">Juega <strong id="team-name-label">El equipo</strong></span>
+          <button class="primary" id="next" type="button" disabled>Siguiente pregunta</button>
+        </div>
+      </div>
+
+      <div class="results" id="results" hidden>
+        <div class="results-inner">
+          <div class="hero-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </div>
+          <h1 id="result-title">¡Buen trabajo, equipo!</h1>
+          <div class="final-score" id="final-score">0 <span>/ 10</span></div>
+          <p id="result-message">Cada pregunta es una oportunidad para aprender en equipo.</p>
+          <div class="results-note" id="retro-prompt">Pregunta para la retro: ¿Qué pequeño experimento podríamos probar en el próximo sprint?</div>
+          <button class="primary" id="play-again" type="button" style="margin-top: 22px">Jugar otra vez</button>
+        </div>
+      </div>
+    </section>
+    <footer class="below">
+      <span>Jueguen en equipo: <strong>conversen antes de responder.</strong></span>
+      <span>Sin reloj ni presión: solo buenas conversaciones.</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const questions = [
+        {
+          category: "Valores ágiles",
+          question: "El equipo puede agregar más detalles a un plan o mostrar a las personas usuarias una parte funcional. ¿Qué valora más el Manifiesto Ágil?",
+          answers: ["La documentación exhaustiva", "El software funcionando", "Seguir el plan original", "La negociación contractual"],
+          correct: 1,
+          explanation: "Se valora más el software funcionando que la documentación exhaustiva. La documentación útil sigue importando; se trata de qué tiene prioridad."
+        },
+        {
+          category: "Scrum",
+          question: "En Scrum, ¿para qué sirve principalmente la reunión diaria?",
+          answers: ["Informar el estado a la persona Scrum Master", "Revisar el avance hacia el objetivo del sprint y adaptar el plan", "Estimar el trabajo del próximo sprint", "Evaluar el rendimiento individual"],
+          correct: 1,
+          explanation: "El equipo de desarrollo revisa el avance hacia el objetivo del sprint y adapta el plan para el día siguiente. Es un espacio de planificación del equipo, no un informe de estado."
+        },
+        {
+          category: "Retrospectivas",
+          question: "Una retrospectiva termina con varias ideas para mejorar. ¿Qué hace que el siguiente paso sea más concreto?",
+          answers: ["Agregar todas las ideas al backlog", "Elegir un experimento pequeño, asignar a una persona responsable y revisar su impacto", "Pedirle a la persona gerente que elija", "Esperar a la próxima retrospectiva para decidir"],
+          correct: 1,
+          explanation: "Un experimento pequeño, con una persona responsable y seguimiento, hace que la mejora sea concreta, permita aprender y sea más fácil de mantener."
+        },
+        {
+          category: "Flujo de trabajo",
+          question: "El trabajo se acumula porque todas las personas empiezan tareas nuevas antes de terminar las actuales. ¿Qué cambio ayuda más a resolver el cuello de botella?",
+          answers: ["Aumentar el trabajo en curso", "Limitar el trabajo en curso y terminar antes de empezar más tareas", "Hacer que cada tarea sea más grande", "Agregar más reuniones"],
+          correct: 1,
+          explanation: "Limitar el trabajo en curso ayuda a identificar cuellos de botella y anima al equipo a terminar trabajo valioso antes de empezar más."
+        },
+        {
+          category: "Enfoque de producto",
+          question: "Una parte interesada pide una funcionalidad, pero el problema aún no está claro. ¿Cuál es el mejor primer paso?",
+          answers: ["Construir exactamente lo que pidió", "Aclarar la necesidad de las personas usuarias y poner a prueba la suposición más riesgosa", "Agregarla de inmediato al próximo sprint", "Estimarla antes de hacer preguntas"],
+          correct: 1,
+          explanation: "Comprender el problema y poner a prueba las suposiciones ayuda al equipo a lograr resultados, en lugar de entregar funcionalidades que quizá no ayuden."
+        },
+        {
+          category: "Scrum",
+          question: "¿Quién es responsable de ordenar el backlog del producto para maximizar su valor?",
+          answers: ["La persona Scrum Master", "El equipo de desarrollo", "La persona Product Owner", "La persona patrocinadora del proyecto"],
+          correct: 2,
+          explanation: "La persona Product Owner es responsable de gestionar eficazmente el backlog del producto, incluido ordenar sus elementos para maximizar el valor."
+        },
+        {
+          category: "Colaboración",
+          question: "Una persona del equipo detecta un impedimento durante el sprint. ¿Qué respuesta favorece más la agilidad?",
+          answers: ["Esperar a la próxima reunión de seguimiento", "Hacer visible el impedimento y colaborar para resolverlo o adaptarse", "Buscar una solución alternativa sin contárselo a nadie", "Pasarle la tarea a otra persona sin conversarlo"],
+          correct: 1,
+          explanation: "La transparencia permite que el equipo responda pronto, colabore para eliminar el impedimento y adapte su plan en conjunto."
+        },
+        {
+          category: "Entrega",
+          question: "¿Por qué los equipos ágiles buscan entregar incrementos pequeños y frecuentes?",
+          answers: ["Para evitar hablar con las partes interesadas", "Para recibir comentarios antes y reducir el riesgo de construir algo que no se necesita", "Para que cada entrega sea la última", "Para eliminar la necesidad de hacer pruebas"],
+          correct: 1,
+          explanation: "Las entregas frecuentes permiten recibir comentarios y aprender antes, lo que ayuda al equipo a reducir riesgos y adaptarse a lo que descubre."
+        },
+        {
+          category: "Calidad",
+          question: "Un equipo encuentra defectos una y otra vez al final de las entregas. ¿Qué principio le serviría más como guía?",
+          answers: ["Revisar la calidad solo al final", "Incorporar la calidad durante todo el trabajo", "Dejar las pruebas únicamente en manos de especialistas", "Posponer la integración hasta terminar todo"],
+          correct: 1,
+          explanation: "Incorporar la calidad durante el desarrollo —incluidas las pruebas y la integración continuas— reduce las sorpresas tardías y el retrabajo."
+        },
+        {
+          category: "Valores ágiles",
+          question: "Aparece información nueva que cambia lo que necesitan las personas clientes. ¿Qué fomenta la agilidad?",
+          answers: ["Seguir el plan porque cambiarlo significa fracasar", "Responder al cambio sin perder de vista el objetivo y el valor", "Pausar las entregas hasta reescribir el plan", "Evitar conversar sobre el cambio con el equipo"],
+          correct: 1,
+          explanation: "La agilidad acepta cambios en los requisitos cuando generan valor para las personas clientes, y el equipo decide con intención sobre el alcance y los objetivos."
+        }
+      ];
+
+      const intro = document.querySelector("#intro");
+      const quiz = document.querySelector("#quiz");
+      const results = document.querySelector("#results");
+      const teamInput = document.querySelector("#team-name");
+      const teamStat = document.querySelector("#team-stat");
+      const scoreStat = document.querySelector("#score-stat");
+      const roundStat = document.querySelector("#round-stat");
+      const teamNameLabel = document.querySelector("#team-name-label");
+      const questionNumber = document.querySelector("#question-number");
+      const category = document.querySelector("#category");
+      const progress = document.querySelector("#progress-fill");
+      const progressTrack = document.querySelector(".progress-track");
+      const questionTitle = document.querySelector("#question");
+      const answersElement = document.querySelector("#answers");
+      const feedback = document.querySelector("#feedback");
+      const nextButton = document.querySelector("#next");
+      let teamName = "El equipo";
+      let score = 0;
+      let currentQuestion = 0;
+      let answered = false;
+      let roundQuestions = [];
+
+      function startGame() {
+        teamName = teamInput.value.trim() || "El equipo";
+        roundQuestions = questions.map(item => {
+          const choices = item.answers.map((text, index) => ({ text, correct: index === item.correct }));
+          for (let index = choices.length - 1; index > 0; index--) {
+            const swapIndex = Math.floor(Math.random() * (index + 1));
+            [choices[index], choices[swapIndex]] = [choices[swapIndex], choices[index]];
+          }
+          return {
+            ...item,
+            answers: choices.map(choice => choice.text),
+            correct: choices.findIndex(choice => choice.correct)
+          };
+        });
+        score = 0;
+        currentQuestion = 0;
+        scoreStat.textContent = score;
+        teamStat.textContent = teamName;
+        teamNameLabel.textContent = teamName;
+        intro.hidden = true;
+        results.hidden = true;
+        quiz.hidden = false;
+        renderQuestion();
+      }
+
+      function renderQuestion() {
+        answered = false;
+        const item = roundQuestions[currentQuestion];
+        questionNumber.textContent = `${currentQuestion + 1} de ${questions.length}`;
+        roundStat.textContent = `${currentQuestion + 1}/${questions.length}`;
+        category.textContent = item.category;
+        questionTitle.textContent = item.question;
+        feedback.textContent = "";
+        feedback.className = "feedback";
+        nextButton.disabled = true;
+        nextButton.textContent = currentQuestion === questions.length - 1 ? "Ver resultados" : "Siguiente pregunta";
+        progress.style.width = `${(currentQuestion / questions.length) * 100}%`;
+        progressTrack.setAttribute("aria-valuenow", currentQuestion);
+        answersElement.replaceChildren();
+
+        item.answers.forEach((answer, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "answer";
+          button.setAttribute("aria-label", `Respuesta ${String.fromCharCode(65 + index)}: ${answer}`);
+          const key = document.createElement("span");
+          key.className = "answer-key";
+          key.setAttribute("aria-hidden", "true");
+          key.textContent = String.fromCharCode(65 + index);
+          const label = document.createElement("span");
+          label.textContent = answer;
+          button.append(key, label);
+          button.addEventListener("click", () => selectAnswer(index));
+          answersElement.append(button);
+        });
+      }
+
+      function selectAnswer(choice) {
+        if (answered) return;
+        answered = true;
+        const item = roundQuestions[currentQuestion];
+        const buttons = [...answersElement.querySelectorAll(".answer")];
+        buttons.forEach((button, index) => {
+          button.disabled = true;
+          if (index === item.correct) button.classList.add("correct");
+          else if (index === choice) button.classList.add("incorrect");
+        });
+
+        if (choice === item.correct) {
+          score++;
+          scoreStat.textContent = score;
+          feedback.textContent = `¡Correcto! ${item.explanation}`;
+          feedback.classList.add("good");
+        } else {
+          feedback.textContent = `No exactamente. ${item.explanation}`;
+          feedback.classList.add("bad");
+        }
+        nextButton.disabled = false;
+      }
+
+      function showResults() {
+        quiz.hidden = true;
+        results.hidden = false;
+        roundStat.textContent = `${questions.length}/${questions.length}`;
+        progress.style.width = "100%";
+        progressTrack.setAttribute("aria-valuenow", questions.length);
+        document.querySelector("#result-title").textContent = score === questions.length
+          ? "¡Un equipo ágil de primera!"
+          : score >= 7 ? "¡Gran intuición de equipo!" : "¡La curiosidad nos ayuda a crecer!";
+        document.querySelector("#final-score").innerHTML = `${score} <span>/ ${questions.length}</span>`;
+        document.querySelector("#result-message").textContent =
+          `${teamName} respondió correctamente ${score} de ${questions.length} preguntas. Lo mejor fue todo lo que conversaron en el camino.`;
+        document.querySelector("#retro-prompt").textContent =
+          score >= 7
+            ? "Pregunta para la retro: ¿Cuál de estos hábitos ágiles ya es una fortaleza del equipo y cómo podrían desarrollarlo?"
+            : "Pregunta para la retro: ¿Qué idea de la trivia podrían probar como un pequeño experimento en el próximo sprint?";
+      }
+
+      document.querySelector("#start").addEventListener("click", startGame);
+      nextButton.addEventListener("click", () => {
+        if (!answered) return;
+        currentQuestion++;
+        if (currentQuestion === questions.length) showResults();
+        else renderQuestion();
+      });
+      document.querySelector("#play-again").addEventListener("click", startGame);
+      teamInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") startGame();
+      });
+    })();
+  </script>
+</body>
+</html>
